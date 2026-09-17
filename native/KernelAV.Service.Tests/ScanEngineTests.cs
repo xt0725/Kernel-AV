@@ -1,4 +1,5 @@
 using KernelAV.Service;
+using Xunit;
 
 namespace KernelAV.Service.Tests;
 
@@ -56,4 +57,3 @@ public sealed class ScanEngineTests
         Assert.Equal("ransomware-like-file-activity", alert!.Category);
     }
 }
-

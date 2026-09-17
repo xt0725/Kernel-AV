@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import time
 from pathlib import Path
 
 from .database import Database
@@ -40,6 +41,14 @@ def parser() -> argparse.ArgumentParser:
     restore.add_argument("id")
     restore.add_argument("--to", type=Path)
     restore.add_argument("--vault", type=Path, default=default_vault)
+
+    watch = sub.add_parser("watch", help="monitor a directory and scan file changes")
+    watch.add_argument("path", type=Path)
+    watch.add_argument("--rules", type=Path, default=Path("rules"))
+    watch.add_argument("--seconds", type=float, help="stop automatically after this duration")
+
+    processes = sub.add_parser("processes", help="monitor new processes")
+    processes.add_argument("--seconds", type=float, help="stop automatically after this duration")
     return command
 
 
@@ -65,9 +74,51 @@ def main(argv: list[str] | None = None) -> int:
         restored = Quarantine(database, args.vault).restore(args.id, args.to)
         print(restored)
         return 0
+    if args.command == "watch":
+        from .sensor import FileSensor
+
+        engine = YaraEngine(args.rules)
+        sensor = FileSensor(
+            args.path,
+            Scanner(database, engine),
+            database,
+            result_callback=lambda result: print(json.dumps(result.as_dict(), ensure_ascii=False)),
+            alert_callback=lambda alert: print(json.dumps(
+                {"category": alert.category, "severity": alert.severity,
+                 "subject": alert.subject, "description": alert.description,
+                 "evidence": alert.evidence}, ensure_ascii=False
+            )),
+        )
+        try:
+            sensor.start()
+            deadline = None if args.seconds is None else time.monotonic() + args.seconds
+            while deadline is None or time.monotonic() < deadline:
+                time.sleep(0.25)
+        except KeyboardInterrupt:
+            pass
+        finally:
+            sensor.stop()
+        return 0
+    if args.command == "processes":
+        from .process_monitor import ProcessMonitor
+
+        def report(alert: object) -> None:
+            payload = {
+                "category": alert.category, "severity": alert.severity,
+                "subject": alert.subject, "description": alert.description,
+                "evidence": alert.evidence,
+            }
+            database.log_behavior(alert.category, alert.severity, alert.subject, payload)
+            print(json.dumps(payload, ensure_ascii=False))
+
+        monitor = ProcessMonitor(report)
+        try:
+            monitor.run(args.seconds)
+        except KeyboardInterrupt:
+            monitor.stop()
+        return 0
     return 2
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

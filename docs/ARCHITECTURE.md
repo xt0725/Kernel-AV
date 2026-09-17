@@ -9,8 +9,11 @@ service-control privileges.
 4. **UI/CLI** — unprivileged clients using an authenticated local IPC channel.
 5. **Updater** — downloads a signed manifest, verifies it offline, then swaps databases atomically.
 
-The current milestone implements the engine, CLI, audit log, and a local quarantine vault.
-It does not claim kernel-level blocking or tamper resistance.
+The current milestone implements the engine, CLI, audit log, local quarantine vault, file-event
+sensor, process telemetry, and a non-destructive ransomware activity score. It does not claim
+kernel-level blocking or tamper resistance. Filesystem notifications do not identify the process
+responsible for a write, so file and process signals are deliberately not attributed to each other
+without stronger Windows telemetry.
 
 ## Non-negotiable controls
 
@@ -29,4 +32,3 @@ The production service will use a dedicated service SID, explicit DACLs, restric
 and SCM recovery settings. Protected Process Light is not promised: Microsoft restricts
 anti-malware protected services to properly signed ELAM vendors. Kernel callbacks and
 filesystem minifilters are out of scope until the user-mode pipeline is stable and audited.
-

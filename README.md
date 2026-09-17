@@ -4,7 +4,7 @@ Kernel-AV is an early-stage, Windows-first defensive endpoint scanner. The proje
 explainable detections, least privilege, and testable components over "kernel antivirus"
 marketing claims.
 
-## Milestone 1: scanning core
+## Milestones 1–2: scanning core and sensors
 
 Implemented in this milestone:
 
@@ -19,8 +19,20 @@ Implemented in this milestone:
 - unit tests that use harmless fixtures only.
 
 This is **not yet a replacement for Microsoft Defender or another production EDR**. Real-time
-monitoring, process telemetry, ransomware scoring, signed updates, a Windows service, service
+monitoring, process telemetry, and non-destructive ransomware scoring are now available as an
+experimental sensor. Signed updates, automatic containment policy, a Windows service, service
 hardening, and the GUI belong to subsequent milestones.
+
+Milestone 2 adds:
+
+- recursive OS-backed file create/modify/move events through Watchdog;
+- bounded queues, duplicate-event suppression, and full-tree recovery after queue overflow;
+- streaming scans for changed files;
+- new-process polling with explainable detections for suspicious PowerShell and common
+  signed-binary proxy execution patterns;
+- a sliding-window ransomware score based on file rate, breadth, rename bursts, repeated
+  extensions, and ransom-note names;
+- durable behavioral alerts. The sensor reports only; it does not kill processes or delete data.
 
 ## Quick start
 
@@ -34,6 +46,8 @@ kernel-av scan .\sample.bin --rules .\rules
 kernel-av add-signature <sha256> <family> --source local
 kernel-av quarantine .\sample.bin --sha256 <sha256>
 kernel-av restore <quarantine-id>
+kernel-av watch C:\Users\me\Downloads --rules .\rules
+kernel-av processes
 ```
 
 Exit codes are `0` clean, `10` suspicious, `20` malicious, and `30` scan error. A missing
@@ -44,8 +58,8 @@ continue to work.
 
 | Milestone | Scope | Security gate |
 | --- | --- | --- |
-| 1 — Core | scan, signatures, YARA, heuristics, log, quarantine | unit tests and safe fixtures |
-| 2 — Sensor | real-time file events and process telemetry | bounded queues, deduplication, load tests |
+| 1 — Core ✓ | scan, signatures, YARA, heuristics, log, quarantine | unit tests and safe fixtures |
+| 2 — Sensor | real-time file events, process telemetry, ransomware score | bounded queues, deduplication, Windows CI |
 | 3 — Behavior | ransomware correlation and response | canary tests, false-positive policy, rollback |
 | 4 — Updates | signed manifests and atomic database updates | offline signature verification, anti-rollback |
 | 5 — Product | Windows service, authenticated IPC, GUI | ACL review, installer/uninstaller tests |

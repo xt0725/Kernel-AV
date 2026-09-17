@@ -34,6 +34,14 @@ CREATE TABLE IF NOT EXISTS quarantine (
     quarantined_at TEXT NOT NULL,
     restored_at TEXT
 );
+CREATE TABLE IF NOT EXISTS behavior_alerts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    observed_at TEXT NOT NULL,
+    category TEXT NOT NULL,
+    severity INTEGER NOT NULL CHECK(severity BETWEEN 0 AND 100),
+    subject TEXT NOT NULL,
+    details_json TEXT NOT NULL
+);
 """
 
 
@@ -84,10 +92,20 @@ class Database:
                 "INSERT INTO detections(scanned_at, path, sha256, verdict, details_json) "
                 "VALUES (?, ?, ?, ?, ?)",
                 (_now(), str(result.path), result.sha256, result.verdict.value,
-                 json.dumps(result.as_dict(), ensure_ascii=False)),
+                json.dumps(result.as_dict(), ensure_ascii=False)),
+            )
+
+    def log_behavior(
+        self, category: str, severity: int, subject: str, details: dict[str, object]
+    ) -> None:
+        with self.connect() as connection:
+            connection.execute(
+                "INSERT INTO behavior_alerts(observed_at, category, severity, subject, details_json) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (_now(), category, max(0, min(100, severity)), subject,
+                 json.dumps(details, ensure_ascii=False)),
             )
 
 
 def _now() -> str:
     return datetime.now(UTC).isoformat()
-

@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sys
 import time
 from pathlib import Path
 
@@ -17,6 +18,11 @@ def _defaults() -> tuple[Path, Path]:
     return root / "kernel-av.db", root / "quarantine"
 
 
+def _default_rules() -> Path:
+    bundle_root = getattr(sys, "_MEIPASS", None)
+    return Path(bundle_root) / "rules" if bundle_root else Path("rules")
+
+
 def parser() -> argparse.ArgumentParser:
     default_db, default_vault = _defaults()
     command = argparse.ArgumentParser(prog="kernel-av", description="Kernel-AV defensive scanner")
@@ -25,7 +31,7 @@ def parser() -> argparse.ArgumentParser:
 
     scan = sub.add_parser("scan", help="scan one file")
     scan.add_argument("path", type=Path)
-    scan.add_argument("--rules", type=Path, default=Path("rules"))
+    scan.add_argument("--rules", type=Path, default=_default_rules())
 
     signature = sub.add_parser("add-signature", help="add a malicious SHA-256")
     signature.add_argument("sha256")
@@ -44,7 +50,7 @@ def parser() -> argparse.ArgumentParser:
 
     watch = sub.add_parser("watch", help="monitor a directory and scan file changes")
     watch.add_argument("path", type=Path)
-    watch.add_argument("--rules", type=Path, default=Path("rules"))
+    watch.add_argument("--rules", type=Path, default=_default_rules())
     watch.add_argument("--seconds", type=float, help="stop automatically after this duration")
 
     processes = sub.add_parser("processes", help="monitor new processes")

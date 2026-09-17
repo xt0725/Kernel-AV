@@ -1,0 +1,42 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package
+      Name="Kernel-AV"
+      Manufacturer="Kernel-AV"
+      Version="0.2.0"
+      UpgradeCode="A4D3F887-324F-4FCE-A7A2-67D54839E8BA"
+      Language="1036"
+      Scope="perMachine">
+    <SummaryInformation Description="Kernel-AV native Windows service" />
+    <MajorUpgrade DowngradeErrorMessage="Une version plus récente de Kernel-AV est déjà installée." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="Kernel-AV">
+        <Component Id="NativeServiceComponent" Guid="*" Bitness="always64">
+          <File Id="NativeServiceExe" Source="$(var.PublishDir)\KernelAV.Service.exe" KeyPath="yes" />
+          <ServiceInstall
+              Id="NativeServiceInstaller"
+              Name="KernelAV"
+              DisplayName="Kernel-AV Service"
+              Description="Surveillance et analyse de sécurité Kernel-AV"
+              Start="auto"
+              Type="ownProcess"
+              ErrorControl="normal"
+              Account="LocalSystem" />
+          <ServiceControl
+              Id="NativeServiceControl"
+              Name="KernelAV"
+              Start="install"
+              Stop="both"
+              Remove="uninstall"
+              Wait="yes" />
+        </Component>
+      </Directory>
+    </StandardDirectory>
+
+    <Feature Id="MainFeature" Title="Kernel-AV" Level="1">
+      <ComponentRef Id="NativeServiceComponent" />
+    </Feature>
+  </Package>
+</Wix>
+

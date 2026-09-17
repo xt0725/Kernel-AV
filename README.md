@@ -54,8 +54,10 @@ Exit codes are `0` clean, `10` suspicious, `20` malicious, and `30` scan error. 
 `yara-python` installation produces an explicit warning while SHA-256 and heuristic scanning
 continue to work.
 
-The Windows release also provides a standalone `Kernel-AV.exe`. Verify it against the published
-`SHA256SUMS.txt` before use. The executable is not yet code-signed, so SmartScreen may warn.
+Release `v0.1.0` provides the historical standalone Python-based executable. Starting with
+`v0.2.0`, the recommended package is `Kernel-AV-v0.2.0-x64.msi`: it installs an autonomous
+`.NET 8` Windows service and does not install or execute Python. Verify downloads against the
+published `SHA256SUMS.txt`. Packages are not yet code-signed, so SmartScreen may warn.
 
 ## Delivery roadmap
 

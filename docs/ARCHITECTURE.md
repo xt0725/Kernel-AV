@@ -9,6 +9,14 @@ service-control privileges.
 4. **UI/CLI** — unprivileged clients using an authenticated local IPC channel.
 5. **Updater** — downloads a signed manifest, verifies it offline, then swaps databases atomically.
 
+## Native migration
+
+`native/KernelAV.Service` is the first production-oriented migration step. It is a self-contained
+`.NET 8` Windows service installed per-machine by WiX. It owns file-event collection, streaming
+SHA-256, initial PowerShell heuristics, ransomware activity scoring, and durable logging without
+starting Python. The Python engine remains temporarily as a behavioral reference until signature,
+YARA, quarantine, process telemetry, and update parity are implemented and regression-tested.
+
 The current milestone implements the engine, CLI, audit log, local quarantine vault, file-event
 sensor, process telemetry, and a non-destructive ransomware activity score. It does not claim
 kernel-level blocking or tamper resistance. Filesystem notifications do not identify the process

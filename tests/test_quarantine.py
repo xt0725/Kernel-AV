@@ -28,7 +28,7 @@ class QuarantineTests(unittest.TestCase):
         self.assertFalse(source.exists())
 
         restored = quarantine.restore(item_id)
-        self.assertEqual(restored, source)
+        self.assertTrue(restored.samefile(source))
         self.assertEqual(restored.read_bytes(), b"MZ harmless fixture")
 
     def test_quarantine_rejects_changed_file(self) -> None:
